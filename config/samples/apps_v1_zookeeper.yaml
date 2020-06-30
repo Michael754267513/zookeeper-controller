@@ -1,0 +1,8 @@
+apiVersion: apps.handpay.cn/v1
+kind: Zookeeper
+metadata:
+  name: zookeeper-sample
+spec:
+  # Add fields here
+  image: www.zenghao.com/it/zookeeper:3.5.8
+  nodeList: [{"port": 2181,"name":"zookeeper1","myid":1},{"port": 2182,"name":"zookeeper2","myid":2},{"port": 2183,"name":"zookeeper3","myid":3}]

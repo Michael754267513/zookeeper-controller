@@ -1,0 +1,7 @@
+domain: handpay.cn
+repo: zookeeper-controller
+resources:
+- group: apps
+  kind: Zookeeper
+  version: v1
+version: "2"
