@@ -56,34 +56,35 @@ func (r *ZookeeperReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		}
 		return ctrl.Result{}, err
 	} else {
+
 		// 关联关联OwnerReferences和Finalizer
-		if err := updateComponent(r,ctx,zk); err != nil {
+		if err := updateComponent(r, ctx, zk); err != nil {
 			return ctrl.Result{}, err
 		}
 		// 创建或者更新service
-		serviceList := svc.ServiceLogic(zk.Spec,req)
-		if err :=CreateOrUpdateService(serviceList,zk,r,ctx); err != nil {
+		serviceList := svc.ServiceLogic(zk.Spec, req)
+		if err := CreateOrUpdateService(serviceList, zk, r, ctx); err != nil {
 			return ctrl.Result{}, err
 		}
 		// 创建或者更新deployment
-		deployList := dp.DeployMentLogic(zk.Spec,req)
-		if err := CreateOrUpdateDeployMent(deployList,zk,r,ctx);err != nil {
+		deployList := dp.DeployMentLogic(zk.Spec, req)
+		if err := CreateOrUpdateDeployMent(deployList, zk, r, ctx); err != nil {
 			return ctrl.Result{}, err
+
 		}
 	}
 
 	// 判断资源是否是删除
 	if zk.DeletionTimestamp != nil {
-		log.Info("资源删除：",req.Name,"  环境：",req.Namespace)
+		log.Info("资源删除：", req.Name, "  环境：", req.Namespace)
 		return ctrl.Result{}, nil
 	}
 	return ctrl.Result{}, err
 
-
 }
 
-func CreateOrUpdateDeployMent(deployList []v1.Deployment,zk appsv1.Zookeeper,r *ZookeeperReconciler,ctx context.Context) (err error) {
-	for _,k := range deployList {
+func CreateOrUpdateDeployMent(deployList []v1.Deployment, zk appsv1.Zookeeper, r *ZookeeperReconciler, ctx context.Context) (err error) {
+	for _, k := range deployList {
 		if k.ObjectMeta.OwnerReferences == nil {
 			if err := ctrl.SetControllerReference(&zk, &k, r.Scheme); err != nil {
 				log.Info("关联OwnerReferences错误")
@@ -92,7 +93,7 @@ func CreateOrUpdateDeployMent(deployList []v1.Deployment,zk appsv1.Zookeeper,r *
 		}
 		isExist := &v1.Deployment{}
 		key, _ := client.ObjectKeyFromObject(&k)
-		if err = r.Get(ctx, key, isExist); err != nil {
+		if err := r.Get(ctx, key, isExist); err != nil {
 			if errors.IsNotFound(err) {
 				log.Info("deployment 新建资源: ", k.Name)
 				if _, err := ctrl.CreateOrUpdate(ctx, r.Client, &k, func() error {
@@ -103,21 +104,20 @@ func CreateOrUpdateDeployMent(deployList []v1.Deployment,zk appsv1.Zookeeper,r *
 				}
 			}
 		} else {
-
-				if !reflect.DeepEqual(k.Spec, isExist.Spec) {
-					isExist.Spec = k.Spec
-					log.Info("Deployment 资源更新: ",k.Name)
-					if err := r.Update(context.TODO(), isExist); err != nil {
-						return err
-					}
+			if !reflect.DeepEqual(k.Spec, isExist.Spec) {
+				isExist.Spec = k.Spec
+				log.Info("Deployment 资源更新: ", k.Name)
+				if err := r.Update(context.TODO(), isExist); err != nil {
+					return err
 				}
 			}
 		}
+	}
 	return err
 }
 
-func CreateOrUpdateService(serviceList []apiv1.Service,zk appsv1.Zookeeper,r *ZookeeperReconciler,ctx context.Context) (err error) {
-	for _,k := range serviceList {
+func CreateOrUpdateService(serviceList []apiv1.Service, zk appsv1.Zookeeper, r *ZookeeperReconciler, ctx context.Context) (err error) {
+	for _, k := range serviceList {
 		if k.ObjectMeta.OwnerReferences == nil {
 			if err := ctrl.SetControllerReference(&zk, &k, r.Scheme); err != nil {
 				log.Info("关联OwnerReferences错误")
@@ -126,7 +126,7 @@ func CreateOrUpdateService(serviceList []apiv1.Service,zk appsv1.Zookeeper,r *Zo
 		}
 		isExist := &apiv1.Service{}
 		key, _ := client.ObjectKeyFromObject(&k)
-		if err = r.Get(ctx, key, isExist); err != nil {
+		if err := r.Get(ctx, key, isExist); err != nil {
 			if errors.IsNotFound(err) {
 				log.Info("Service 新建资源: ", k.Name)
 				if _, err := ctrl.CreateOrUpdate(ctx, r.Client, &k, func() error {
@@ -137,20 +137,20 @@ func CreateOrUpdateService(serviceList []apiv1.Service,zk appsv1.Zookeeper,r *Zo
 				}
 			}
 		} else {
-				if !reflect.DeepEqual(k.Spec, isExist.Spec) {
-					k.Spec.ClusterIP = isExist.Spec.ClusterIP
-					isExist.Spec = k.Spec
-					log.Info("Service 资源更新:",k.Name)
-					if err := r.Update(context.TODO(), isExist); err != nil {
-						return err
-					}
+			if !reflect.DeepEqual(k.Spec, isExist.Spec) {
+				k.Spec.ClusterIP = isExist.Spec.ClusterIP
+				isExist.Spec = k.Spec
+				log.Info("Service 资源更新:", k.Name)
+				if err := r.Update(context.TODO(), isExist); err != nil {
+					return err
 				}
 			}
 		}
+	}
 	return err
 }
 
-func updateComponent(r *ZookeeperReconciler,ctx  context.Context, zk appsv1.Zookeeper) (err error) {
+func updateComponent(r *ZookeeperReconciler, ctx context.Context, zk appsv1.Zookeeper) (err error) {
 	// Finalizer 异步删除数据
 	myFinalizerName := "Finalizer.handpay.cn"
 	if zk.ObjectMeta.DeletionTimestamp.IsZero() {
