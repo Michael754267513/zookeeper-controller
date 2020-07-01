@@ -104,7 +104,10 @@ func CreateOrUpdateDeployMent(deployList []v1.Deployment, zk appsv1.Zookeeper, r
 				}
 			}
 		} else {
-			if !reflect.DeepEqual(k.Spec, isExist.Spec) {
+			if !reflect.DeepEqual(k.Spec.Template.Spec.Volumes, isExist.Spec.Template.Spec.Volumes) ||
+				!reflect.DeepEqual(k.Spec.Template.Spec.Containers[0].Env, isExist.Spec.Template.Spec.Containers[0].Env) ||
+				!reflect.DeepEqual(k.Spec.Template.Spec.Containers[0].Image, isExist.Spec.Template.Spec.Containers[0].Image) ||
+				!reflect.DeepEqual(k.Spec.Template.Spec.Containers[0].Ports, isExist.Spec.Template.Spec.Containers[0].Ports) {
 				isExist.Spec = k.Spec
 				log.Info("Deployment 资源更新: ", k.Name)
 				if err := r.Update(context.TODO(), isExist); err != nil {
@@ -137,7 +140,8 @@ func CreateOrUpdateService(serviceList []apiv1.Service, zk appsv1.Zookeeper, r *
 				}
 			}
 		} else {
-			if !reflect.DeepEqual(k.Spec, isExist.Spec) {
+			if !reflect.DeepEqual(k.Spec.ClusterIP, isExist.Spec.ClusterIP) ||
+				!reflect.DeepEqual(k.Spec.Selector, isExist.Spec.Selector) {
 				k.Spec.ClusterIP = isExist.Spec.ClusterIP
 				isExist.Spec = k.Spec
 				log.Info("Service 资源更新:", k.Name)
